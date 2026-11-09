@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Project: SiteWatch - โมดูล State Machine & แจ้งเตือน (คนที่ 3)
-# File: state_alert.sh
+# Project: SiteWatch - โมดูล State Machine & แจ้งเตือน
 # ==============================================================================
 
 # อ่านสถานะรอบก่อนหน้าจาก State File
@@ -20,13 +19,12 @@ get_previous_state() {
         return 0
     fi
 
-    # ค้นหาบรรทัดที่ขึ้นต้นด้วย target= ในไฟล์ state
-    # ใช้ grep -F เพื่อไม่ให้เครื่องหมายพิเศษใน URL / IP ตีความเป็น regex
-    # ใส่ || true เพื่อป้องกัน set -euo pipefail ล้มเหลวเมื่อ grep ไม่พบบรรทัด
-    match=$(grep -F "${target}=" "$state_file" 2>/dev/null | tail -n 1 || true)
+    # ค้นหาบรรทัดที่ขึ้นต้นด้วย target= ในไฟล์ state โดยเช็คให้ตรงตัวแบบเป๊ะๆ (exact match ที่คอลัมน์แรก)
+    # ใส่ || true เพื่อป้องกัน set -euo pipefail ล้มเหลวเมื่อ awk ไม่พบบรรทัด
+    match=$(awk -F'=' -v t="$target" '$1 == t {res=$2} END {if (res) print res}' "$state_file" 2>/dev/null || true)
 
     if [[ -n "$match" ]]; then
-        echo "${match#*=}"
+        echo "$match"
     else
         echo "UNKNOWN"
     fi
@@ -58,15 +56,15 @@ check_and_notify() {
         return 0
     fi
 
-    # กรณีที่ 3: สถานะเปลี่ยนจาก UP -> DOWN (Service ล่ม!)
+    # กรณีที่ 3: สถานะเปลี่ยนจาก UP -> DOWN
     if [[ "$old_state" == "UP" && "$new_state" == "DOWN" ]]; then
-        log ERROR "[ALERT] ตรวจพบเหตุขัดข้อง! [${target}] สถานะเปลี่ยนจาก UP -> DOWN"
+        log ERROR "[ALERT] ตรวจพบเหตุขัดข้อง [${target}] สถานะเปลี่ยนจาก UP -> DOWN"
         return 0
     fi
 
-    # กรณีที่ 4: สถานะเปลี่ยนจาก DOWN -> UP (Service ฟื้นคืนชีพ)
+    # กรณีที่ 4: สถานะเปลี่ยนจาก DOWN -> UP
     if [[ "$old_state" == "DOWN" && "$new_state" == "UP" ]]; then
-        log INFO "[RECOVERY] บริการกลับมาออนไลน์แล้ว! [${target}] สถานะเปลี่ยนจาก DOWN -> UP"
+        log INFO "[RECOVERY] บริการกลับมาออนไลน์แล้ว [${target}] สถานะเปลี่ยนจาก DOWN -> UP"
         return 0
     fi
 
@@ -101,10 +99,10 @@ save_state() {
         }
     fi
 
-    # บันทึกแบบ Atomic โดยลบบรรทัดเก่าออกแล้วต่อท้ายด้วยค่าใหม่
+    # บันทึกแบบ Atomic โดยลบบรรทัดเก่าออกแล้วต่อท้ายด้วยค่าใหม่ (ใช้ awk เช็คเฉพาะ key ฝั่งซ้าย)
     temp_file="${state_file}.tmp.$$"
     if [[ -f "$state_file" ]]; then
-        grep -v -F "${target}=" "$state_file" > "$temp_file" 2>/dev/null || true
+        awk -F'=' -v t="$target" '$1 != t' "$state_file" > "$temp_file" 2>/dev/null || true
     else
         : > "$temp_file"
     fi
@@ -130,6 +128,23 @@ handle_state_alert() {
     local dry_run="${3:-0}"
     local state_file="${STATE_FILE:-/tmp/sitewatch.state}"
     local old_state
+
+    # ถ้าปลายทางหลักเขียนไม่ได้และไม่ได้อยู่ในโหมด dry-run ให้ fallback มาที่ /tmp อัตโนมัติ
+    if (( ! dry_run )) && [[ "$state_file" != /tmp/* ]]; then
+        local state_dir
+        state_dir="$(dirname "$state_file")"
+        if [[ -d "$state_dir" ]]; then
+            if [[ ! -w "$state_dir" ]]; then
+                state_file="/tmp/sitewatch_state.env"
+            fi
+        else
+            local parent_dir
+            parent_dir="$(dirname "$state_dir")"
+            if [[ ! -w "$parent_dir" ]]; then
+                state_file="/tmp/sitewatch_state.env"
+            fi
+        fi
+    fi
 
     old_state=$(get_previous_state "$state_file" "$target")
     check_and_notify "$target" "$old_state" "$new_state"
