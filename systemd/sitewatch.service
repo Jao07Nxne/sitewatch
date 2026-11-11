@@ -1,0 +1,13 @@
+[Unit]
+Description=SiteWatch Network & Website Monitoring Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/sitewatch/bin/sitewatch.sh -c /etc/sitewatch/sitewatch.conf
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

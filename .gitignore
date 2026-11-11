@@ -1,0 +1,14 @@
+# Exclude test files
+tests/
+test/
+
+# Temporary / Local state & metrics
+*.tmp.*
+*.env
+*.csv
+*.log
+
+# Editor & OS artifacts
+.vscode/
+.idea/
+.DS_Store

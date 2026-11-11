@@ -1,0 +1,12 @@
+[Unit]
+Description=SiteWatch Periodic Monitoring Timer (Runs every 2 minutes)
+Requires=sitewatch.service
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+Persistent=true
+Unit=sitewatch.service
+
+[Install]
+WantedBy=timers.target
