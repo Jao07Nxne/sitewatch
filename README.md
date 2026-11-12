@@ -41,6 +41,8 @@ sitewatch/
 * **แพ็กเกจที่จำเป็น:** `bash`, `curl`, `netcat` (`nc`), `awk`, `grep`, `systemd`
 
 ### ติดตั้งเครื่องมือที่จำเป็น
+> **หมายเหตุ:** สคริปต์ `install.sh` จะทำการตรวจสอบและติดตั้งแพ็กเกจที่จำเป็นผ่าน Package Manager (`apt` สำหรับ Ubuntu/Debian หรือ `dnf`/`yum` สำหรับ Rocky Linux) ให้โดยอัตโนมัติขณะรันติดตั้ง หรือสามารถติดตั้งด้วยตนเองล่วงหน้าได้ดังนี้:
+
 ```bash
 sudo apt update && sudo apt install -y curl netcat-openbsd gawk dnsutils
 ```

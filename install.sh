@@ -11,7 +11,21 @@ fi
 
 echo "Installing SiteWatch..."
 
-# 1. Check dependencies
+# 1. Install and check dependencies
+echo "Checking and installing dependencies..."
+if command -v apt-get >/dev/null 2>&1; then
+    echo "Updating apt cache and installing required packages (curl, netcat-openbsd, gawk, dnsutils)..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y
+    apt-get install -y curl netcat-openbsd gawk dnsutils
+elif command -v dnf >/dev/null 2>&1; then
+    echo "Installing required packages with dnf..."
+    dnf install -y curl nc gawk bind-utils
+elif command -v yum >/dev/null 2>&1; then
+    echo "Installing required packages with yum..."
+    yum install -y curl nc gawk bind-utils
+fi
+
 for cmd in curl nc awk date systemctl; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "[ERROR] Missing dependency: $cmd" >&2
