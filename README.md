@@ -75,16 +75,17 @@ sudo apt update && sudo apt install -y curl netcat-openbsd gawk dnsutils
 สามารถเรียกใช้งานคำสั่ง `sitewatch` ผ่าน Terminal ได้โดยตรง:
 
 ```bash
-sitewatch [-c config] [-v] [-n] [-h]
+sitewatch [-c config] [-v] [-n] [-h] [--uninstall]
 ```
 
 ### คำอธิบาย Options:
 | Flag | รายละเอียด |
 | :--- | :--- |
-| `-h` | แสดงคู่มือช่วยเหลือและวิธีใช้งาน |
+| `-h`, `--help` | แสดงคู่มือช่วยเหลือและวิธีใช้งาน |
 | `-c FILE` | กำหนดพาธไฟล์ config ที่ต้องการใช้งาน (ค่าเริ่มต้น: `/etc/sitewatch/sitewatch.conf`) |
 | `-v` | เปิดโหมด Verbose เพื่อแสดงขั้นตอนการทำงานและรายละเอียดการ Probe อย่างละเอียด |
 | `-n` | โหมด Dry-run จำลองการทำงานโดยไม่มีการบันทึกทับไฟล์ CSV หรือ State File จริง |
+| `--uninstall` | สั่งถอนการติดตั้ง SiteWatch และลบไฟล์ทั้งหมดออกจากระบบ |
 
 ### ตัวอย่างคำสั่ง:
 
@@ -139,8 +140,18 @@ STATE_FILE="/var/lib/sitewatch/state.env"
 
 ## 🗑️ วิธีการถอนการติดตั้ง
 
-หากต้องการนำระบบออกจากเครื่องเซิร์ฟเวอร์:
+สามารถสั่งถอนการติดตั้งผ่านคำสั่ง `sitewatch` ได้โดยตรง:
 
+```bash
+sudo sitewatch --uninstall
+```
+
+หากต้องการถอนการติดตั้งและลบแพ็กเกจเสริมออกด้วย:
+```bash
+sudo sitewatch --uninstall --purge-deps
+```
+
+หรือสั่งผ่านสคริปต์ถอนการติดตั้งโดยตรง:
 ```bash
 sudo ./uninstall.sh
 ```

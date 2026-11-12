@@ -41,6 +41,8 @@ chmod 755 /opt/sitewatch /opt/sitewatch/bin /opt/sitewatch/config /etc/sitewatch
 cp -f "${SCRIPT_DIR}/bin/"*.sh /opt/sitewatch/bin/
 chmod 755 /opt/sitewatch/bin/*.sh
 cp -f "${SCRIPT_DIR}/config/sitewatch.conf" /opt/sitewatch/config/sitewatch.conf
+cp -f "${SCRIPT_DIR}/uninstall.sh" /opt/sitewatch/uninstall.sh
+chmod 755 /opt/sitewatch/uninstall.sh
 
 if [[ ! -f /etc/sitewatch/sitewatch.conf ]]; then
     cp -f "${SCRIPT_DIR}/config/sitewatch.conf" /etc/sitewatch/sitewatch.conf

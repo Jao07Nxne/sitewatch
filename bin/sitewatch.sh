@@ -76,13 +76,14 @@ run() {
 
 usage() {
     cat <<EOF
-Usage: $SCRIPT_NAME [-c config] [-v] [-n] [-h]
+Usage: $SCRIPT_NAME [-c config] [-v] [-n] [-h] [--uninstall]
 
-Option:
-  -c FILE   ระบุไฟล์ config (ค่าเริ่มต้น: ../config/sitewatch.conf)
-  -v        แสดงรายละเอียดการทำงาน
-  -n        dry-run
-  -h        แสดงวิธีใช้งาน
+Options:
+  -c FILE        ระบุไฟล์ config (ค่าเริ่มต้น: /etc/sitewatch/sitewatch.conf)
+  -v             แสดงรายละเอียดการทำงาน (Verbose)
+  -n             โหมด dry-run (ทดสอบโดยไม่บันทึกข้อมูล)
+  -h, --help     แสดงวิธีใช้งาน
+  --uninstall    ถอนการติดตั้ง SiteWatch ออกจากระบบโดยสมบูรณ์
 EOF
 }
 
@@ -141,6 +142,44 @@ EOF
 # Main Flow
 # ------------------------------------------------------------------------------
 main() {
+    # ตรวจสอบ Flag พิเศษ เช่น --uninstall หรือ --help
+    for arg in "$@"; do
+        case "$arg" in
+            --uninstall|-u)
+                if [[ "${EUID}" -ne 0 ]]; then
+                    echo "[INFO] Sudo privileges required to uninstall SiteWatch."
+                    exec sudo "$REAL_SOURCE" "$@"
+                fi
+
+                local uninstaller=""
+                if [[ -x "/opt/sitewatch/uninstall.sh" ]]; then
+                    uninstaller="/opt/sitewatch/uninstall.sh"
+                elif [[ -x "${SCRIPT_DIR}/../uninstall.sh" ]]; then
+                    uninstaller="${SCRIPT_DIR}/../uninstall.sh"
+                elif [[ -x "${SCRIPT_DIR}/uninstall.sh" ]]; then
+                    uninstaller="${SCRIPT_DIR}/uninstall.sh"
+                fi
+
+                if [[ -n "$uninstaller" ]]; then
+                    local remaining_args=()
+                    for a in "$@"; do
+                        if [[ "$a" != "--uninstall" && "$a" != "-u" ]]; then
+                            remaining_args+=("$a")
+                        fi
+                    done
+                    exec "$uninstaller" "${remaining_args[@]+"${remaining_args[@]}"}"
+                else
+                    echo "[ERROR] ไม่พบไฟล์สคริปต์ถอนการติดตั้ง (uninstall.sh)" >&2
+                    exit 1
+                fi
+                ;;
+            --help)
+                usage
+                exit 0
+                ;;
+        esac
+    done
+
     print_banner
 
     while getopts ":c:vnh" opt; do
